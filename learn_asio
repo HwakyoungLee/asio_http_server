@@ -47,15 +47,20 @@ std::vector<header> Content-type:text
 boost::asio::const_buffer
 
 2.known fields
-reply{
-//data
-status
-vector<header>
+
+                status          status_msg(status)
+HTTP/1.0        200             OK
+
+header.name     header.value
+Content-Length: 625
+Content-Type:   text/plain
+
 content
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 //ops
-to_buffers()
-stock_reply()
+to_buffers() -> boost::asio::buffer(std::string)
+stock_reply() -> reply
 
 ================================================================================================================================
 
@@ -76,11 +81,49 @@ std::string doc_root_
 
 3.ops
 request_handler::request_handler(path)
-request_handler::handler_request(request,reply) -> request_handler::url_decode(request,reply)
+request_handler::handle_request(request,reply)  ->  ::extension_to_types()
+                                                    request_handler::url_decode(request,reply)
 
 static request_handler::url_decode(_IN string, _OUT string)
 
+
+                ===============================================================================================================
+                                                                    mime_types.hpp.cpp
+                ===============================================================================================================
+                1. unknown symbols
+
+                2. known fields
+                struct mapping{char* extension;char* mime_type;}[] mappings
+
+                3. ops
+                ::extension_to_type(std::string extension) -> mappings[i].extension ==> mappings.mime_type
+                ===============================================================================================================
+
 ================================================================================================================================
+
+
+
+
+
+================================================================================================================================
+                                                            request_parser.hpp
+================================================================================================================================
+
+1.unknown symbols
+
+2.known fields
+enum state state_
+
+3.ops
+request_parser::request_parser()
+request_parser::reset()
+parse(request,begin,end) -> while(){consume(request&)}
+
+consume(request,input) -> boost::make_tuple(boost::tribool,input_iterator)
+
+================================================================================================================================
+
+
 
 
 
@@ -114,9 +157,9 @@ connection
 request_handler
 
 3.ops
-run
-start_accept
-handle_stop
+run()
+start_accept() -> boost::shared_ptr<T>::reset(new T)
+handle_stop()
 
 ================================================================================================================================
 
@@ -139,7 +182,7 @@ boost::asio::ip::tcp::acceptor
 server::run() -> boost::asio::io_service::run()
 server::start_accept() -> boost::asio::ip::tcp::acceptor::async_accept( server::handle_accept() )
 server::handle_accept() -> connection_manager::start(), server::start_accept()
-handle_stop -> boost::asio::ip::tcp::acceptor::close(), connection_manager::stop_all()
+handle_stop() -> boost::asio::ip::tcp::acceptor::close(), connection_manager::stop_all()
 
 
 ================================================================================================================================
@@ -160,10 +203,10 @@ boost::asio::error::operation_aborted
 
 2.known fields
 boost::asio::ip::tcp::socket
-buffer
+boost::array<char,8192> <- boost::asio::async_read_some,request_parser::parse
 request
-request_handler
-request_parser
+request_handler <- handle_read()
+request_parser <- handle_read()
 reply
 connection_manager
 
@@ -176,6 +219,7 @@ connection::handle_read()   request_handler::handle_request(request,reply) boost
                             boost::asio::async_write
                             boost::async_read_some( connection::handle_read )
                             connection_manager::stop()
+
 connection::handle_write()  boost::asio::socket::shutdown( boost::asio::socket::shutdown_both, boost::system::error_code )
                             connection_manager::stop
 
@@ -195,8 +239,8 @@ boost::bind(connection::stop(),_1)
 std::set<connection>
 
 3.ops
-connection_manager::start() -> std::set<T>::insert(T)
-connection_manager::stop() -> std::set<T>::erase(T)
+connection_manager::start(connection) -> std::set<T>::insert(T)
+connection_manager::stop (connection) -> std::set<T>::erase(T)
 connection_manager::stop_all() -> std::for_each(std::set<T>::begin(), std::set<T>::end() ,connection::stop() ), std::set<T>::clear()
 
 ================================================================================================================================
