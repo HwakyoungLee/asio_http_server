@@ -1,0 +1,203 @@
+
+================================================================================================================================
+                                                            header.hpp
+================================================================================================================================
+
+1.unknown symbols
+
+2.known fields
+std::string name
+std::string value
+
+3.ops
+
+================================================================================================================================
+
+
+
+
+
+
+================================================================================================================================
+                                                            request.hpp
+================================================================================================================================
+
+1.unknown symbols
+
+2.known fields
+std::string method  std::string uri             int http_version_major      int http_version_minor
+GET                 /index.html        HTTP/    1                       .   0
+
+std::vector<header> Content-type:text
+                    Content-Length:1934
+
+3.ops
+
+================================================================================================================================
+
+
+
+
+
+================================================================================================================================
+                                                            reply.hpp
+================================================================================================================================
+
+1.unknown symbols
+boost::asio::const_buffer
+
+2.known fields
+reply{
+//data
+status
+vector<header>
+content
+
+//ops
+to_buffers()
+stock_reply()
+
+================================================================================================================================
+
+
+
+
+
+
+
+================================================================================================================================
+                                                            request_handler.hpp
+================================================================================================================================
+
+1.unknown symbols
+
+2.known fields
+std::string doc_root_
+
+3.ops
+request_handler::request_handler(path)
+request_handler::handler_request(request,reply) -> request_handler::url_decode(request,reply)
+
+static request_handler::url_decode(_IN string, _OUT string)
+
+================================================================================================================================
+
+
+
+================================================================================================================================
+                                                            main.cpp
+================================================================================================================================
+
+1.unknown symbols
+
+2.known fields
+
+3.ops
+server(host,port,path)
+server.run()
+================================================================================================================================
+
+
+
+
+================================================================================================================================
+                                                            server.hpp
+================================================================================================================================
+
+1.unknown symbols
+
+2.known fields
+boost::asio::io_service
+boost::asio::ip::tcp::acceptor
+connection_manager
+connection
+request_handler
+
+3.ops
+run
+start_accept
+handle_stop
+
+================================================================================================================================
+
+
+
+
+================================================================================================================================
+                                                            server.cpp
+================================================================================================================================
+
+1.unknown symbols
+boost::asio::ip::tcp::resolver
+boost::asio::ip::tcp::resolver::query
+boost::asio::ip::tcp::endpoint
+boost::asio::ip::tcp::acceptor
+
+2.known fields
+
+3.ops
+server::run() -> boost::asio::io_service::run()
+server::start_accept() -> boost::asio::ip::tcp::acceptor::async_accept( server::handle_accept() )
+server::handle_accept() -> connection_manager::start(), server::start_accept()
+handle_stop -> boost::asio::ip::tcp::acceptor::close(), connection_manager::stop_all()
+
+
+================================================================================================================================
+
+
+
+
+================================================================================================================================
+                                                            connection.hpp.cpp
+================================================================================================================================
+
+1.unknown symbols
+boost::array<class,size_t>
+boost::tie ( boost::tribool, boost::tuples::ignore )
+boost::bind
+boost::asio::error::operation_aborted
+
+
+2.known fields
+boost::asio::ip::tcp::socket
+buffer
+request
+request_handler
+request_parser
+reply
+connection_manager
+
+3.ops
+connection::socket()
+connection::start() -> boost::asio::socket::async_read_some( connection::handle_read() )
+connection::stop() -> boost::asio::socket::close()
+
+connection::handle_read()   request_handler::handle_request(request,reply) boost::asio::async_write( connection::handle_write() )
+                            boost::asio::async_write
+                            boost::async_read_some( connection::handle_read )
+                            connection_manager::stop()
+connection::handle_write()  boost::asio::socket::shutdown( boost::asio::socket::shutdown_both, boost::system::error_code )
+                            connection_manager::stop
+
+================================================================================================================================
+
+
+
+
+================================================================================================================================
+                                                        connection_manager.hpp.cpp
+================================================================================================================================
+
+1.unknown symbols
+boost::bind(connection::stop(),_1) 
+
+2.known fields
+std::set<connection>
+
+3.ops
+connection_manager::start() -> std::set<T>::insert(T)
+connection_manager::stop() -> std::set<T>::erase(T)
+connection_manager::stop_all() -> std::for_each(std::set<T>::begin(), std::set<T>::end() ,connection::stop() ), std::set<T>::clear()
+
+================================================================================================================================
+
