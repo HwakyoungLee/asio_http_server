@@ -1,0 +1,2 @@
+export LD_LIBRARY_PATH=/opt/boost/lib
+./server 127.0.0.1 8888 .
